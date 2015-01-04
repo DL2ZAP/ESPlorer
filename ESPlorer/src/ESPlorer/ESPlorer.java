@@ -6164,19 +6164,24 @@ public class ESPlorer extends javax.swing.JFrame {
         //SnippetText.setText(Snippets[n]);
         SendToESP(Snippets[n]);
     }
-    private void CommandsSetNodeMCU() {
-            Command.removeAllItems();
-            Command.addItem(new String("print(node.heap())"));
-            Command.addItem(new String("print(node.chipid())"));
-            Command.addItem(new String("file.close()"));
-            Command.addItem(new String("file.remove(\"\")"));
-            Command.addItem(new String("dofile(\"\")"));        
+    private void CommandsSetNodeMCU() { // canged to Load/Save History 2015-01-04 DL2ZAP
+            //Command.removeAllItems();
+            //Command.addItem(new String("print(node.heap())"));
+            //Command.addItem(new String("print(node.chipid())"));
+            //Command.addItem(new String("file.close()"));
+            //Command.addItem(new String("file.remove(\"\")"));
+            //Command.addItem(new String("dofile(\"\")"));
+            SaveCMD_History ("AT");
+            LoadCMD_History ("LUA");
+            
     }   
-    private void CommandsSetAT() {
-            Command.removeAllItems();
-            Command.addItem(new String("AT"));
-            Command.addItem(new String("AT+GMR"));
-            Command.addItem(new String("AT+RST"));            
+    private void CommandsSetAT() { // canged to Load/Save History 2015-01-04 DL2ZAP
+            //Command.removeAllItems();
+            //Command.addItem(new String("AT"));
+            //Command.addItem(new String("AT+GMR"));
+            //Command.addItem(new String("AT+RST"));            
+            SaveCMD_History ("LUA");
+            LoadCMD_History ("AT");
     }
     /**
      * @param args the command line arguments
@@ -7655,4 +7660,81 @@ public class ESPlorer extends javax.swing.JFrame {
       SnippetEdit14.setToolTipText(ButtonSnippet14.getText());
       SnippetEdit15.setToolTipText(ButtonSnippet15.getText());
     }
+  
+    private void LoadCMD_History (String mode) {
+    prefs = Preferences.userRoot().node(nodeRoot); 
+
+    if  (mode.equals("LUA") || mode.equals("AT") ) { 
+            Command.removeAllItems();    
+        String[] presets = new String[20] ;
+     
+        if  (mode.equals("LUA")) {      
+            presets[0] = "print(node.heap())";
+            presets[1] = "print(node.chipid())";
+            presets[2] = "file.close()";
+            presets[3] = "file.remove(\"\")";
+            presets[4] = "dofile(\"\")";
+        } else { // "AT-Mode"
+            presets[0] = "AT";
+            presets[1] = "AT+GMR";
+            presets[2] = "AT+RST";
+        }
+            log("Command-History ("+mode+"): loading...");
+            String preset_CMD,new_CMD; 	
+            
+            for (int i=0; i < 20; i++) { 
+              String n = Integer.toString(i).trim();
+              //System.out.print(" #"+n + "Preset: " );
+                 
+              preset_CMD = "";
+              //System.out.println (" Preset[i]}="+presets[i]);
+              
+              if (i < presets.length) {
+                preset_CMD = presets[i];
+              } else {
+                  preset_CMD = "";
+              }
+              new_CMD=prefs.get("CMD_Hist_"+ mode + n , "dummy" );                
+              //System.out.println(new_CMD);
+                if (new_CMD.length()>0) Command.addItem(new_CMD);
+              }
+            log("Command-History ("+mode+") load: Success.");
+        } else {
+        //invalid mode
+            log("Command-History ("+mode+") load: invalid Mode!");
+          }      
+    }
+
+    
+    private void SaveCMD_History (String mode) {
+         prefs = Preferences.userRoot().node(nodeRoot); 
+         
+        if (Command.getItemCount() >0){
+
+        if  (mode.equals("LUA") || mode.equals("AT") ) { 
+            log("Command-History ("+mode+"): saving...");
+            String CMD;
+            for (int i=0; i < 20; i++) {
+
+              String n = Integer.toString(i).trim();
+              //System.out.println("Saving #"+n);
+              CMD = "";
+
+              if (i < Command.getItemCount())
+                CMD = Command.getItemAt(i).toString();
+
+              prefs.put("CMD_Hist_" + mode + n , CMD);
+              //System.out.println(" CMD= "+CMD);
+              
+            }
+            log("Command-History ("+mode+") save: Success.");
+        } else {
+        //invalid mode
+            log("Command-History ("+mode+") save: invalid Mode!");
+          }      
+        } else { //empty History
+            log("Command-History ("+mode+") save: Nothing to save");
+          }
+    }
+   
 }
